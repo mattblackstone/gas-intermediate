@@ -1,0 +1,21 @@
+{
+  "name": "automation-tutorial02",
+  "version": "1.0.0",
+  "description": "Google Apps Script intermediate examples for automating Google Sheets",
+  "main": "Code.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "Google Apps Script",
+    "GAS",
+    "Clasp",
+    "Google Sheets"
+  ],
+  "author": "matthewb",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/google-apps-script": "^1.0.20",
+    "typescript": "^4.1.3"
+  }
+}

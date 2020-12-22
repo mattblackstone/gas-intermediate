@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <meta charset="utf-8">
+    <link href="//cdn.muicss.com/mui-0.10.3/css/mui.min.css" rel="stylesheet" type="text/css" />
+    <script src="//cdn.muicss.com/mui-0.10.3/js/mui.min.js"></script>
+    <style>
+      #content { margin: 1rem; }
+      legend { padding: 0 2px; }
+      label { padding-right: 4px; }
+      fieldset { border-radius: 6px; }
+      #cover { position: absolute; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(255, 255, 255, 0.75); }
+    </style>
+  </head>
+  <body>
+    <div id="content">
+      <div id="loading">Loading...</div>
+      <div id="ui" style="display: none;">
+        <h3>Process Sheet Data</h3>
+        <fieldset id="inputs">
+          <legend>Options</legend>
+        </fieldset>
+        <input type="checkbox" name="header" id="header" checked>
+        <label for="header">Contains header row?</label>
+        <input type="button" value="Write" onclick="writeColumnCombos()">
+      </div>
+    </div>
+    <div id="cover" style="display: none;"><div style="align-self: center; margin: auto;">Running script...</div></div>
+    <script>
+      function buildUi(data) {
+        var sheetNames = data;
+        document.querySelector('#loading').style.display = 'none';
+        createMenu(sheetNames, 'source-sheet', 'Source sheet', '#inputs');
+        createMenu(sheetNames, 'destination-sheet', 'Destination sheet', '#inputs');
+        document.querySelector('#ui').style.display = 'unset';
+      }
+
+      function createMenu(items, id, label, target) {
+        var frag = new DocumentFragment();
+        var sel = document.createElement('select');
+        var lab = document.createElement('label');
+        sel.id = lab.htmlFor = id;
+        lab.textContent = label;
+        items.forEach(item => {
+          var opt = document.createElement('option');
+          opt.value = item;
+          opt.text = item;
+          sel.add(opt);
+        });
+        frag.appendChild(lab);
+        frag.appendChild(sel);
+        document.querySelector(target).appendChild(frag);
+      }
+
+      function getOptions() {
+        var src = document.querySelector('#source-sheet').value;
+        var dest = document.querySelector('#destination-sheet').value;
+        var header = document.querySelector('#header').checked;
+        document.querySelector('#cover').style.display = 'flex';
+        return { src: src, dest: dest, header: header };
+      }
+
+      function getSheetNames() {
+        google.script.run
+          .withSuccessHandler(buildUi)
+          .withFailureHandler(logError)
+          .getSheetNames();
+      }
+
+      function writeColumnCombos() {
+        google.script.run
+          .withSuccessHandler(writeSuccess)
+          .withFailureHandler(logError)
+          .writeColumnCombos(getOptions());
+      }
+
+      function writeSuccess(msg) {
+        document.querySelector('#cover').style.display = 'none';
+      }
+
+      function logError(msg) {
+        console.log(msg);
+      }
+
+      window.onload = getSheetNames;
+    </script>
+  </body>
+</html>
