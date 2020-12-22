@@ -19,7 +19,10 @@ function writeColumnCombos(opts: {src?: string, dest: string, header?: boolean})
     const combos = combinations(rowsToColumnsFlat(sheetData.slice(1)));
     writeData(headerRow.concat(combos), destSheet);
   } else {
-    writeData(combinations(rowsToColumnsFlat(sheetData)), destSheet);
+    const columns = rowsToColumnsFlat(sheetData);
+    const columnGroups = arraySplit(columns, x => x.length === 0);
+    const flattened = ensureArray2d(columnGroups, rotateAndJoin);
+    writeData(combinations(flattened), destSheet);
   }
 }
 
@@ -61,23 +64,29 @@ function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu('Custom Scripts')
     .addItem('Write Sheet Data', 'writeSheetData')
-    .addItem('Show prompt', 'showPrompt')
+    .addItem('Set preferred name', 'showPrompt')
     .addItem('Show sidebar', 'showSidebar')
     .addToUi();
+  const preferredName: string = getUserName();
+  if (preferredName) {
+    const ui = SpreadsheetApp.getUi();
+    ui.alert(`Welcome back ${preferredName}!`);
+  }
 }
 
 function showPrompt() {
   const ui = SpreadsheetApp.getUi();
   const result = ui.prompt(
     'Let\'s get to know each other!',
-    'Please enter your name:',
+    'Please enter your preferred name:',
     ui.ButtonSet.OK_CANCEL);
 
   // Process the user's response.
   const button = result.getSelectedButton();
-  const text = result.getResponseText();
+  const name = result.getResponseText();
   if (button == ui.Button.OK) {
-    ui.alert(`Your name is ${text}.`); // User clicked "OK".
+    setUserName(name);
+    ui.alert(`Your preferred name is ${name}.`); // User clicked "OK".
   } else if (button == ui.Button.CANCEL) {
     ui.alert('I didn\'t get your name.'); // User clicked "Cancel".
   } else if (button == ui.Button.CLOSE) {
@@ -92,12 +101,13 @@ function showSidebar() {
 
 function combinations(arr2d:any[][]) {
   const r = [];
-  const max = arr2d.length - 1;
+  const af = arr2d.filter(x => x.length > 0); // no blank arrays allowed
+  const max = af.length - 1;
 
   function helper(arr:any[], i:number) {
-    for (let j = 0, l = arr2d[i].length; j < l; j++) {
-      const a = arr.slice(0); // clone arr
-      a.push(arr2d[i][j]);
+    for (let j = 0, l = af[i].length; j < l; j++) {
+      const a = arr.slice(0);
+      a.push(af[i][j]);
       if (i === max) r.push(a);
       else helper(a, i + 1);
     }
@@ -105,3 +115,48 @@ function combinations(arr2d:any[][]) {
   helper([], 0);
   return r;
 }
+
+function setUserName(name: string) {
+  PropertiesService.getUserProperties().setProperty('PREFERRED_NAME', name);
+}
+
+function getUserName() {
+  return PropertiesService.getUserProperties().getProperty('PREFERRED_NAME');
+}
+
+function arraySplit(arr: any[], condition: Function) {
+  const result = [];
+  let i = 0;
+  arr.forEach(x => condition(x) ? i++ : result[i] ? result[i].push(x) : result[i] = [x]);
+  return result;
+}
+
+function ensureArray2d(arr: any[][], action: Function) {
+  const arr2d = arr.slice();
+  arr2d.forEach((x, i) => (x.length > 1)
+    ? arr2d[i] = action(x)
+    : arr2d[i] = x[0]);
+  return arr2d;
+}
+
+function rotateAndJoin(arr: any[], str: string = ', ') {
+  return rowsToColumnsFlat(arr).map(x => x.join(str));
+}
+
+// LOCAL TESTING ONLY
+
+const testData = [
+  ["TASK", "", "FIRST NAME", "NICKNAME", "TITLE", "", "DAY"],
+  ["automation", "", "Matthew", "Matt", "Tech Dir", "", "Mon"],
+  ["front-end", "", "Jorge", "Chorch", "Tech Lead", "", "Tue"],
+  ["", "", "Agustín", "Agus", "Sr Creative Tech", "", "Wed"],
+  ["", "", "", "", "", "", "Thu"],
+  ["", "", "", "", "", "", "Fri"]
+];
+
+const columns = rowsToColumnsFlat(testData.slice(1));
+console.log(columns);
+const columnGroups = arraySplit(columns, x => x.length === 0);
+console.log(columnGroups);
+const flattened = ensureArray2d(columnGroups, rotateAndJoin);
+console.log(combinations(flattened));

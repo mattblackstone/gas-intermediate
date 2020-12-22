@@ -1,23 +1,18 @@
 function logActiveSheetData() {
-  Logger.log('active sheet data (rowStart = 2):');
-  Logger.log(getSheetData());
+  Logger.log(`active sheet data:\n${JSON.stringify(getSheetData())}`);
 }
   
 function logColumnCombos() {
   const data = getSheetData();
   const columns = rowsToColumnsFlat(data.slice(1));
-  Logger.log('header row:');
-  Logger.log(data.slice(0, 1));
-  Logger.log('data (rows):');
-  Logger.log(data.slice(1));
-  Logger.log('data (columns):');
-  Logger.log(columns);
-  Logger.log('column combinations:');
-  Logger.log(combinations(columns));
+  Logger.log(`header row:\n${JSON.stringify(data.slice(0, 1))}`);
+  Logger.log(`data (rows)\n${JSON.stringify(data.slice(1))}`);
+  Logger.log(`data (columns)\n${JSON.stringify(columns)}`);
+  Logger.log(`column combinations:\n${JSON.stringify(combinations(columns))}`);
 }
 
 function logSheetNames() {
-  Logger.log(`sheet names: ${getSheetNames()}`);
+  Logger.log(`sheet names:\n${JSON.stringify(getSheetNames())}`);
 }
 
 function testWriteColumnCombos() {
